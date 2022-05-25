@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { take } from 'rxjs';
+import { POSITION } from '../models/position.model';
 
 import { ICurrency } from '../models/currency.model';
 import { CurrencyService } from '../services/currency.service';
@@ -10,93 +11,87 @@ import { CurrencyService } from '../services/currency.service';
   styleUrls: ['./currency-converter.component.scss'],
 })
 export class CurrencyConverterComponent implements OnInit {
-  value = 1;
-  convertedValue: number;
-  currency: ICurrency;
-  convertedCurrency: ICurrency;
+  topValue = 1;
+  bottomValue: number;
+  topCurrency: ICurrency;
+  bottomCurrency: ICurrency;
   currencies$ = this.currencyService.getCurrencies().pipe(take(1));
+  inputPosition = POSITION;
 
   constructor(private currencyService: CurrencyService) {}
 
   ngOnInit() {
     this.currencies$.subscribe((currencies) => {
-      this.currency = currencies.find((v) => v.code === 'THB')!;
-      this.convertedCurrency = currencies.find((v) => v.code === 'USD')!;
-      this.convertExchangeRate('main');
+      this.topCurrency = currencies.find((v) => v.code === 'THB')!;
+      this.bottomCurrency = currencies.find((v) => v.code === 'USD')!;
+      this.convertExchangeRate(POSITION.top);
     });
   }
 
-  selectCurrency(currency: ICurrency) {
-    if (currency === this.convertedCurrency) {
+  selectCurrency(currency: ICurrency, position: POSITION) {
+    const isSelectSameCurrency =
+      currency ===
+      (position === POSITION.top ? this.bottomCurrency : this.topCurrency);
+
+    if (isSelectSameCurrency) {
       this.switchValue();
       return;
     }
 
-    this.currency = currency;
-    this.convertExchangeRate('main');
+    if (position === POSITION.top) this.topCurrency = currency;
+    if (position === POSITION.bottom) this.bottomCurrency = currency;
+
+    this.convertExchangeRate(position);
   }
 
-  selectConvertedCurrency(currency: ICurrency) {
-    if (currency === this.currency) {
-      this.switchValue();
-      return;
-    }
+  updateInputValue(value: number, position: POSITION) {
+    if (position === POSITION.top) this.topValue = value;
+    if (position === POSITION.bottom) this.bottomValue = value;
 
-    this.convertedCurrency = currency;
-    this.convertExchangeRate('converted');
+    this.convertExchangeRate(position);
   }
 
-  updateValue(value: number) {
-    this.value = value;
-    this.convertExchangeRate('main');
-  }
+  convertExchangeRate(position: POSITION) {
+    const topExchangeRate = this.topCurrency.exchangeRate;
+    const bottomExchangeRate = this.bottomCurrency.exchangeRate;
 
-  updateConvertedValue(value: number) {
-    this.convertedValue = value;
-    this.convertExchangeRate('converted');
-  }
-
-  convertExchangeRate(type: 'main' | 'converted') {
-    const exchangeRate = this.currency.exchangeRate;
-    const convertedExchangeRate = this.convertedCurrency.exchangeRate;
-
-    if (type === 'main') {
-      this.convertedValue = this.calculateExchangeRate(
-        this.value,
-        exchangeRate,
-        convertedExchangeRate,
-        this.convertedCurrency.decimal
+    if (position === POSITION.top) {
+      this.bottomValue = this.calculateExchangeRate(
+        this.topValue,
+        topExchangeRate,
+        bottomExchangeRate,
+        this.bottomCurrency.decimal
       );
 
       return;
     }
 
-    this.value = this.calculateExchangeRate(
-      this.convertedValue,
-      convertedExchangeRate,
-      exchangeRate,
-      this.currency.decimal
+    this.topValue = this.calculateExchangeRate(
+      this.bottomValue,
+      bottomExchangeRate,
+      topExchangeRate,
+      this.topCurrency.decimal
     );
   }
 
   calculateExchangeRate(
     inputValue: number,
-    currentExchangeRate: number,
-    convertedExchangeRate: number,
+    inputRate: number,
+    outputRate: number,
     decimal: number
   ): number {
-    return +(
-      (inputValue / currentExchangeRate) *
-      convertedExchangeRate
-    ).toFixed(decimal);
+    const calculatedValue = (inputValue / inputRate) * outputRate;
+    const calculatedDecimal = +calculatedValue.toFixed(decimal);
+
+    return calculatedDecimal;
   }
 
   switchValue() {
-    [this.currency, this.convertedCurrency] = [
-      this.convertedCurrency,
-      this.currency,
+    [this.topCurrency, this.bottomCurrency] = [
+      this.bottomCurrency,
+      this.topCurrency,
     ];
 
-    this.convertExchangeRate('main');
+    this.convertExchangeRate(POSITION.top);
   }
 }
