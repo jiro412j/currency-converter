@@ -22,7 +22,7 @@ Install required packages
 $ npm install
 ```
 
-Run development server and open it on the brownser
+Run development server and open it on the browser
 
 ```
 $ ng serve

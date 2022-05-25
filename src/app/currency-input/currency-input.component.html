@@ -1,0 +1,16 @@
+<div class="currency-input">
+  <input
+    class="form-control"
+    type="number"
+    min="0"
+    [(ngModel)]="inputValue"
+    (ngModelChange)="updateInputValue($event)"
+  />
+  <p-dropdown
+    [options]="currencies"
+    [(ngModel)]="selectedCurrency"
+    optionLabel="name"
+    [filter]="false"
+    (onChange)="selectCurrency()"
+  ></p-dropdown>
+</div>

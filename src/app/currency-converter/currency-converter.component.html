@@ -1,0 +1,23 @@
+<ng-container *ngIf="currencies$ | async as currencies">
+  <div class="converter">
+    <app-currency-input
+      [currencies]="currencies"
+      [selectedCurrency]="currency"
+      [inputValue]="value"
+      (onCurrencySelected)="selectCurrency($event)"
+      (onInputValueChanged)="updateValue($event)"
+    ></app-currency-input>
+
+    <div class="converter-switch" (click)="switchValue()">
+      <button class="btn btn-primary btn-sm">Swap</button>
+    </div>
+
+    <app-currency-input
+      [currencies]="currencies"
+      [selectedCurrency]="convertedCurrency"
+      [inputValue]="convertedValue"
+      (onCurrencySelected)="selectConvertedCurrency($event)"
+      (onInputValueChanged)="updateConvertedValue($event)"
+    ></app-currency-input>
+  </div>
+</ng-container>
